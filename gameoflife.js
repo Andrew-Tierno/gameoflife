@@ -3,6 +3,12 @@ function Grid(sizex, sizey) {
 	this.szx = sizex;
 	this.szy = sizey; 
 	this.age = null;
+	this.automaticIntervalID = null;
+	this.updateTime = 1000;
+	this.automatic = false;
+	this.isGridEnabled = true;
+	this.cellSize = 8;
+	this.draw();
 }
 Grid.prototype.at = function at(x,y) {
 	return this.world[this.idx(x,y)];
@@ -64,23 +70,38 @@ Grid.prototype.advance = function advance() {
 } 
 
 Grid.prototype.draw = function draw(cellSize) {
-	if (cellSize == undefined) cellSize = 3; 
 	var canvas = document.getElementById("view");
 	var ctx = canvas.getContext("2d"); 
+	ctx.clearRect(0, 0, 512, 512);
 	ctx.fillStyle = "cadetblue";
-        ctx.strokeStyle = '#e1e1e1';
-        ctx.clearRect(0, 0, 512, 512);
+    ctx.strokeStyle = '#e1e1e1';
 	for(var y = 0; y < this.szy; y++) {
 		for(var x = 0; x < this.szx; x++) {
 			if(this.isAlive(x,y)) {
 				ctx.beginPath();
-				ctx.rect(x*8, y*8, 8, 8);
+				ctx.rect(x*cellSize, y*this.cellSize, this.cellSize, this.cellSize);
                                 ctx.fill();
 			}
                         //else ctx.stroke();
 		}
 	}
-        
+	console.log("Grid:" + Boolean(this.isGridEnabled));
+	if (this.isGridEnabled) {
+		ctx.strokeStyle = "black";
+		ctx.lineWidth = .5;
+		for (var i = 1; i < 512 / this.cellSize; i++) {
+			ctx.beginPath();
+			ctx.moveTo(this.cellSize * i, 0);
+			ctx.lineTo(this.cellSize * i, 512);
+			ctx.stroke(); 
+		}
+		for (var i = 1; i < 512 / this.cellSize; i++) {
+			ctx.beginPath();
+			ctx.moveTo(0, this.cellSize * i);
+			ctx.lineTo(512, this.cellSize * i);
+			ctx.stroke(); 
+		}
+	}
 }
 Grid.prototype.randomize = function randomize() {
 	var t = 0;
@@ -91,14 +112,45 @@ Grid.prototype.randomize = function randomize() {
 		}
 	}
 	this.age++;
-} 
+}
 Grid.prototype.next = function next() {
 	(this.isNew()) ? this.randomize() : this.advance();
+	document.getElementById("day").innerHTML = "Day " + this.age;
 	var canvas = document.getElementById("view");
 	var ctx = canvas.getContext("2d");
 	ctx.clearRect(0,0,canvas.width, canvas.height);
-	this.draw(cellSize);
+	this.draw(this.cellSize);
+}
+Grid.prototype.switchAutomatic = function switchAutomatic() {
+	this.automatic = !this.automatic;
+	if (this.automatic) {
+		this.automaticIntervalID = setInterval("world.next()", this.updateTime);
+		document.getElementById("switch").innerHTML = "Manual";
+		document.getElementById("next").disabled = true; //Disable manual controls during automatic
+	} else {
+		window.clearInterval(this.automaticIntervalID);
+		document.getElementById("switch").innerHTML = "Automatic";
+		document.getElementById("next").disabled = false; //Reenable manual controls
+	}
+}
+Grid.prototype.checkOptions = function checkOptions() {
+	if (this.cellSize != parseInt(document.getElementById("cellSize").value)) {
+		this.cellSize = parseInt(document.getElementById("cellSize").value);
+		this.draw(this.cellSize);
+	}
+	if (this.isGridEnabled != document.getElementById("grid").checked) {
+		this.isGridEnabled = document.getElementById("grid").checked;
+		this.draw(this.cellSize);
+	}
+	if (this.automatic) {
+		var currMSPD = (1 / document.getElementById("dps").value) * 1000; //The current Milliseconds per Day can be found as (1 / Days per Second) times 1000 (conversion factor)
+		if (this.updateTime != currMSPD) { //If the update time does not reflect the user input, change it
+			this.updateTime = currMSPD;
+			window.clearInterval(this.automaticIntervalID);
+			this.automaticIntervalID = setInterval("world.next()", this.updateTime);
+		}
+	}
 }
 var world  = new Grid(200,200);
-var cellSize = 5; 
-setInterval("world.next()",40);
+setInterval("world.checkOptions()", 500);
+//setInterval("world.next()",40);

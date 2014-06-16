@@ -1,7 +1,26 @@
 <!DOCTYPE html>
 <html>
-<body>
-<canvas id="view" width="512" height="512"></canvas>
-<script type="text/javascript"src = "gameoflife.js"></script>
-</body>
+	<body>
+		<div id="day" style="float:center;">Day 0</div>
+		<canvas id="view" width="512" height="512" style="border:1px solid #000000;"></canvas>
+		<script type="text/javascript"src = "gameoflife.js"></script>
+		<br>
+		<button id="next" onclick="world.next()" style="float:left;">Next Day</button>
+		<button id="switch" onclick="world.switchAutomatic()">Automatic</button>
+		<br>
+		<br>
+		<div style="float:left;">Grid On:</div>
+		<input id="grid" checked="true" type="checkbox" value="true"></input>
+		<br>
+		<div style="float:left;">Days per Second: </div>
+		<input id="dps" value="10" type="number" min="0"></input>
+		<br>
+		<div style="float:left;">Cell Size:</div>
+		<select id="cellSize">
+			<option value="4">4</option>
+			<option value="8" selected>8</option>
+			<option value="16">16</option>
+			<option value="32">32</option>
+		</select>
+	</body>
 </html>
